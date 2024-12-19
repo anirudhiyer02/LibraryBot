@@ -4,7 +4,32 @@ from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 import time
+import sys
 from datetime import datetime, timedelta
+
+def login_to_ucsb(driver, email, password):
+    wait = WebDriverWait(driver, 10)
+    username = email.split('@')[0]
+    try:
+        # Wait for the login page to load by checking for the email field
+        username_field = wait.until(EC.visibility_of_element_located((By.ID, "username")))  # Update with actual ID
+        username_field.send_keys(username)
+
+        # Wait for the password field and input the password
+        password_field = wait.until(EC.visibility_of_element_located((By.ID, "password")))  # Update with actual ID
+        password_field.send_keys(password)
+        time.sleep(1)
+        # Click the login button
+        login_button = wait.until(EC.element_to_be_clickable((By.NAME, "submit")))  # Update with actual ID
+        login_button.click()
+        # print("Logged in successfully.")
+
+        # Optional: Wait to observe the result
+        time.sleep(5)
+
+    except Exception as e:
+        print(f"Error during login: {e}")
+
 def generate_time_end(date, time_slot, duration_hours=1):
     # Parse the date and time_slot into a datetime object
     datetime_str = f"{date} {time_slot}"
@@ -18,7 +43,7 @@ def generate_time_end(date, time_slot, duration_hours=1):
     time_end = time_end.replace("AM", "am").replace("PM", "pm")
 
     return time_end
-def book_room(url, category, date, time_slot, time_end):
+def book_room(url, category, date, time_slot, time_end, email, password):
     try:
         # Initialize the web driver
         driver = webdriver.Chrome()
@@ -73,10 +98,12 @@ def book_room(url, category, date, time_slot, time_end):
         #     print(f"'{option.text}'")
         select = Select(end_time_dropdown)
         select.select_by_visible_text(time_end)
+        time.sleep(1)
         # Click the "Submit Times" button
-        # submit_button = wait.until(EC.element_to_be_clickable((By.ID, "submit_times_button")))
-        # submit_button.click()
-        
+        submit_button = wait.until(EC.element_to_be_clickable((By.ID, "submit_times")))
+        submit_button.click()
+        time.sleep(5)
+        login_to_ucsb(driver, email,password)
         print("Booking completed successfully.")
         time.sleep(15)  # Wait to observe the result before closing the browser
 
@@ -88,9 +115,15 @@ def book_room(url, category, date, time_slot, time_end):
         driver.quit()
 
 # Example usage
+email = sys.argv[1]
+password= sys.argv[2]
 url = "https://libcal.library.ucsb.edu/reserve/24hour"
 category = "Presentation Practice Room"  # Change to desired category
 date = "2024-12-20"              # Date format should match the website's format
 time_slot = "10:00am"    
 time_end = generate_time_end(date, time_slot, 2)        # Change to the desired time slot
-book_room(url, category, date, time_slot, time_end)
+book_room(url, category, date, time_slot, time_end, email, password)
+
+#Bot needs to be able to schedule bookings for dates outside the bookable window, and check if there are any 
+#bookings in the window given a time and date
+#Each day, bot should check if there are any schedulings on the queue that are in the bookable window. 

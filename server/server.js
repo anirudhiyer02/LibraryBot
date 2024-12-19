@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { exec } = require('child_process');
 const app = express();
+const path = require('path');
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
@@ -9,8 +10,9 @@ app.use(express.json());
 
 // Route to trigger the bot
 app.post('/run-bot', (req, res) => {
+    const { email, password } = req.body;
     const scriptPath = '/Users/anirudhiyer/LibraryBot/bot/bookingBot.py';
-    exec(`python3 "${scriptPath}"`, (error, stdout, stderr) => {
+    exec(`python3 "${scriptPath}" "${email}" "${password}"`, (error, stdout, stderr) => {
     if (error) {
       console.error(`Error: ${error.message}`);
       return res.status(500).send('Bot execution failed');
