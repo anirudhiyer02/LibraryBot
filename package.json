@@ -1,5 +1,8 @@
 {
   "dependencies": {
-    "@testing-library/react": "^16.1.0"
+    "@testing-library/react": "^16.1.0",
+    "agenda": "^5.0.0",
+    "mongoose": "^8.9.2",
+    "node-cron": "^3.0.3"
   }
 }

@@ -1,9 +1,10 @@
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import React, {useState} from 'react';
+import { BrowserRouter as Router, Route, Routes, Link, Navigate } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
-
+import Dashboard from './pages/Dashboard';
 function App() {
+  const [userCredentials, setUserCredentials] = useState(null);
   return (
     <Router>
       <div>
@@ -20,7 +21,20 @@ function App() {
 
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/login"
+            element={<LoginPage setUserCredentials={setUserCredentials} />}
+          />
+          <Route
+            path="/dashboard"
+            element={
+              userCredentials ? (
+                <Dashboard userCredentials={userCredentials} />
+              ) : (
+                <p>Please log in first.</p>
+              )
+            }
+          />
         </Routes>
       </div>
     </Router>
