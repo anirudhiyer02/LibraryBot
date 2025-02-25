@@ -26,11 +26,24 @@ function Dashboard({ userCredentials }) {
     fetchBookings();
   }, []); // Empty dependency array ensures this runs only once when the component loads
 
-
+  const formatTimeTo12Hour = (time) => {
+    const [hour, minute] = time.split(':'); // Split "HH:MM" into hour and minute
+    const period = +hour >= 12 ? 'pm' : 'am'; // Determine if it's AM or PM
+    const formattedHour = +hour % 12 || 12; // Convert 24-hour to 12-hour format
+    return `${formattedHour}:${minute}${period}`; // Return formatted time
+  };
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewBooking((prevBooking) => ({ ...prevBooking, [name]: value }));
+  
+    // If the input is for the time slot, format the value
+    const formattedValue =
+      name === 'timeSlot' ? formatTimeTo12Hour(value) : value;
+  
+    setNewBooking((prevBooking) => ({
+      ...prevBooking,
+      [name]: formattedValue
+    }));
   };
 
   // Add a new booking to the queue
@@ -60,6 +73,18 @@ function Dashboard({ userCredentials }) {
   
 
   // Run the booking bot for the queued bookings
+  const runBookingBot = async() => {
+    try {
+        const response = await axios.post('http://localhost:5000/run-bot', {
+          email: userCredentials.email,
+          password: userCredentials.password
+        });
+        alert(`Booking bot started: ${response.data.message}`);
+      } catch (error) {
+        console.error('Error running booking bot:', error);
+        alert('Failed to start the booking bot.');
+      }
+  };
   const handleRunBookingBot = async () => {
     try {
       const response = await axios.post('http://localhost:5000/run-bot', {
@@ -145,7 +170,7 @@ function Dashboard({ userCredentials }) {
       </div>
 
       {/* Run Booking Bot */}
-      <button onClick={handleRunBookingBot} style={styles.button}>
+      <button onClick={runBookingBot} style={styles.button}>
         Run Booking Bot
       </button>
     </div>

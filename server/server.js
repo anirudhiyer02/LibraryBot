@@ -45,6 +45,7 @@ agenda.define('run booking bot', async (job) => {
     } else if (stderr) {
       console.error(`Stderr: ${stderr}`);
     } else {
+
       console.log(`Stdout: ${stdout}`);
     }
   });
@@ -110,7 +111,22 @@ app.post('/add-booking', async (req, res) => {//Save a booking to mongodb
     console.error('Error adding booking:', error);
     res.status(500).send('Failed to add booking');
   }
-});app.get('/get-bookings/:email', async (req, res) => {
+});
+app.post('/delete-all-bookings', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    // Delete all bookings for the given email
+    const result = await Booking.deleteMany({ email: email });
+
+    res.send(`${result.deletedCount} bookings successfully deleted.`);
+  } catch (error) {
+    console.error('Error deleting bookings:', error);
+    res.status(500).send('Failed to delete bookings.');
+  }
+});
+
+app.get('/get-bookings/:email', async (req, res) => {
   try {
     const { email } = req.params;
 
@@ -128,42 +144,45 @@ app.post('/run-bot', async (req, res) => {//runs bot
   const { email, password } = req.body;
 
   try {
+    const scriptPath = '/Users/anirudhiyer/LibraryBot/bot/bookingBot.py';
+    const command = `python3 "${scriptPath}" "${email}" "${password}"`;
+    exec(command);
     // Retrieve all bookings for the user
-    const bookingQueue = await Booking.find({ email });
-    const bookingQueueLen = bookingQueue.length;
-    if (!bookingQueue || bookingQueue.length === 0) {
-      return res.status(400).send('No bookings in the queue');
-    }
+    // const bookingQueue = await Booking.find({ email });
+    // const bookingQueueLen = bookingQueue.length;
+    // if (!bookingQueue || bookingQueue.length === 0) {
+    //   return res.status(400).send('No bookings in the queue');
+    // }
 
-    // Process each booking
-    let bookingResults = [];
-    let completedCount = 0;
+    // // Process each booking
+    // let bookingResults = [];
+    // let completedCount = 0;
+    // const formattedDate = new Date(booking.date).toISOString().split('T')[0];
+    // bookingQueue.forEach((booking, index) => {
+    //   const scriptPath = '/Users/anirudhiyer/LibraryBot/bot/bookingBot.py';
+    //   const command = `python3 "${scriptPath}" "${email}" "${password}" "${booking.date}" "${booking.timeSlot}" "${booking.duration}" "${booking.room}" "${booking.category}"`;
+    //   exec(command, (error, stdout, stderr) => {
+    //     //completedCount++;
 
-    bookingQueue.forEach((booking, index) => {
-      const scriptPath = '/Users/anirudhiyer/LibraryBot/bot/bookingBot.py';
-      const command = `python3 "${scriptPath}" "${email}" "${password}" "${booking.date}" "${booking.timeSlot}" "${booking.duration}" "${booking.room}" "${booking.category}"`;
+    //     if (error) {
+    //       console.error(`Error for booking ${index + 1}: ${error.message}`);
+    //       bookingResults.push({ booking, success: false, error: error.message });
+    //     } else if (stderr) {
+    //       console.error(`Stderr for booking ${index + 1}: ${stderr}`);
+    //       bookingResults.push({ booking, success: false, error: stderr });
+    //     } else {
+    //       console.log(`Stdout for booking ${index + 1}: ${stdout}`);
+    //       bookingResults.push({ booking, success: true, message: stdout });
+    //       completedCount++;
+    //       //Take job off queue
+    //     }
 
-      exec(command, (error, stdout, stderr) => {
-        completedCount++;
-
-        if (error) {
-          console.error(`Error for booking ${index + 1}: ${error.message}`);
-          bookingResults.push({ booking, success: false, error: error.message });
-        } else if (stderr) {
-          console.error(`Stderr for booking ${index + 1}: ${stderr}`);
-          bookingResults.push({ booking, success: false, error: stderr });
-        } else {
-          console.log(`Stdout for booking ${index + 1}: ${stdout}`);
-          bookingResults.push({ booking, success: true, message: stdout });
-          //Take job off queue
-        }
-
-        // When all bookings are processed, send the response
-        if (completedCount === bookingQueueLen) {
-          res.json({ results: bookingResults });
-        }
-      });
-    });
+    //     // When all bookings are processed, send the response
+    //     if (completedCount === bookingQueueLen) {
+    //       res.json({ results: bookingResults });
+    //     }
+    //   });
+    // });
   } catch (error) {
     console.error('Error running bot:', error);
     res.status(500).send('Failed to run bot');
